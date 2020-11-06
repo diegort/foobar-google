@@ -85,37 +85,33 @@ public class Solution {
 	public static int solution(int[][] map) {
 		int min_distance = Integer.MAX_VALUE;
 		int widht = map[0].length, height = map.length;
-		List<int[][]> maps = getMaps(map);
-		
-		for(int[][] m : maps){
-			min_distance = Math.min(min_distance, calculateShortestPath(m));
-			if (min_distance == widht + height - 1){
-				return min_distance;
+
+		int[][] temp_copy;
+		for (int i = 0 ; i < height; ++i){
+			for (int j = 0; j < widht; ++j){
+				if (map[i][j] == 1 && isWorthyToRemoveTheWall(map, i, j)) {
+					temp_copy = copyMap(map);
+
+					temp_copy[i][j] = 0;
+					min_distance = Math.min(min_distance, calculateShortestPath(temp_copy));
+					if (min_distance == widht + height - 1){
+						return min_distance;
+					}
+				}
 			}
 		}
 
 		return min_distance;
 	}
 
-	private static List<int[][]> getMaps(int[][] map){
-		List<int[][]> maps = new LinkedList<>();
-		maps.add(map);
-		int[][] temp_copy;
-		int widht = map[0].length, height = map.length;
-		for (int i = 0 ; i < height; ++i){
-			for (int j = 0; j < widht; ++j){
-				if (map[i][j] == 1 && isWorthyToRemoveTheWall(map, i, j)) {
-					temp_copy = map.clone();
-					for (int k = 0 ; k < height; ++k){
-						temp_copy[k] = map[k].clone();
-					}
-
-					temp_copy[i][j] = 0;
-					maps.add(temp_copy);
-				}
-			}
+	private static int[][] copyMap(int[][] original) {
+		int[][] copy;
+		copy = original.clone();
+		for (int k = 0 ; k < original.length; ++k){
+			copy[k] = original[k].clone();
 		}
-		return maps;
+
+		return copy;
 	}
 
 	private static boolean isWorthyToRemoveTheWall(int[][] map, int row, int col) {
