@@ -23,15 +23,15 @@ public class Solution {
 
     public static void main(String []args) {
         int[][] m1 = { {0, 1, 1, 0},
-                       {0, 1, 1, 1}, 
-                       {0, 1, 1, 0}, 
-                       {1, 0, 0, 0}}; //7
+                       {0, 0, 0, 1}, 
+                       {1, 1, 0, 0}, 
+                       {1, 1, 1, 0}}; //Test case 1 --> 7
         int[][] m2 = { {0, 0, 0, 0, 0, 0}, 
                        {1, 1, 1, 1, 1, 0}, 
                        {0, 0, 0, 0, 0, 0}, 
                        {0, 1, 1, 1, 1, 1}, 
                        {0, 1, 1, 1, 1, 1}, 
-					   {0, 0, 0, 0, 0, 0}}; // 11
+					   {0, 0, 0, 0, 0, 0}}; //Test case 2 --> 11
 		int[][] m3 = { {0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 					   {1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
 					   {1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -63,7 +63,7 @@ public class Solution {
 					   {0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0}, 
 					   {0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0}, 
 					   {0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0}, 
-					   {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0}, //
+					   {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
 					   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
 					   {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, 
 					   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -74,7 +74,6 @@ public class Solution {
 					   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 		int[][] m5 = {{0}};
 
-		isWorthyToRemoveTheWall(m1, 3, 0);
 		measureExecutionTime(() -> solution(m5));
 		measureExecutionTime(() -> solution(m1)); 
 		measureExecutionTime(() -> solution(m2));
@@ -85,19 +84,22 @@ public class Solution {
 	public static int solution(int[][] map) {
 		int min_distance = Integer.MAX_VALUE;
 		int widht = map[0].length, height = map.length;
+		Queue<Node> to_remove = new ArrayDeque<>();
+
+        min_distance = Math.min(min_distance, calculateShortestPath(map, min_distance, to_remove));
+        if (min_distance == widht + height - 1){
+            return min_distance;
+        }
 
 		int[][] temp_copy;
-		for (int i = 0 ; i < height; ++i){
-			for (int j = 0; j < widht; ++j){
-				if (map[i][j] == 1 && isWorthyToRemoveTheWall(map, i, j)) {
-					temp_copy = copyMap(map);
+		while (!to_remove.isEmpty()){
+			Node removable = to_remove.poll();
+			temp_copy = copyMap(map);
 
-					temp_copy[i][j] = 0;
-					min_distance = Math.min(min_distance, calculateShortestPath(temp_copy));
-					if (min_distance == widht + height - 1){
-						return min_distance;
-					}
-				}
+			temp_copy[removable.position.x][removable.position.y] = 0;
+			min_distance = Math.min(min_distance, calculateShortestPath(temp_copy, min_distance));
+			if (min_distance == widht + height - 1){
+				return min_distance;
 			}
 		}
 
@@ -114,16 +116,12 @@ public class Solution {
 		return copy;
 	}
 
-	private static boolean isWorthyToRemoveTheWall(int[][] map, int row, int col) {
-		Node temp = new Node(row, col);
-
-		List<Node> neignbors = getDestinationCells(temp, map);
-		
-		return neignbors.size() >= 2;
+	public static int calculateShortestPath(int[][] map, int current_min_distance) {
+		return calculateShortestPath(map, current_min_distance, null);
 	}
-
-    public static int calculateShortestPath(int[][] map) {
-        int total_distance = Integer.MAX_VALUE - 1;
+	
+	public static int calculateShortestPath(int[][] map, int current_min_distance, Queue<Node> to_remove) {
+        int total_distance = Integer.MAX_VALUE;
         Node start = new Node(0, 0);
 		Node end = new Node(map.length - 1, map[0].length - 1);
 		Queue<Node> to_process = new ArrayDeque <Node>();
@@ -131,27 +129,43 @@ public class Solution {
         to_process.add(start);
        
         while (!to_process.isEmpty()) {
-            Node current = to_process.poll();
-            processed.add(current);
-            if (current.equals(end)) {
-				total_distance = current.distance;
+			Node current = to_process.poll();
+			if (current.distance >= current_min_distance) {
 				to_process.clear();
-            } 
-            else {
-                List<Node> destination_cells = getDestinationCells(current, map);
-                destination_cells.forEach(c -> {
-                    if (!processed.contains(c) && !to_process.contains(c)) {
-                        c.distance = current.distance + 1;
-                        to_process.add(c);
-                    }
-                });
-            }
+			}
+			else {
+				processed.add(current);
+				if (current.equals(end)) {
+					total_distance = current.distance;
+					to_process.clear();
+				} 
+				else {
+					List<Node> destination_cells = getDestinationCells(current, map, true);
+					destination_cells.forEach(c -> {
+						if (map[c.position.x][c.position.y] == 0) {
+							if (!processed.contains(c) && !to_process.contains(c)) {
+								c.distance = current.distance + 1;
+								to_process.add(c);
+							}
+						}
+						else {
+							if (to_remove != null && isWorthyToRemoveTheWall(map, c.position.x, c.position.y) && !to_remove.contains(c)) {
+								to_remove.add(c);
+							}
+						}
+					});
+				}
+			}
         }
        
-        return total_distance + 1;
-    }
+        return total_distance;
+	}
+	
+	private static boolean isWorthyToRemoveTheWall(int[][] map, int row, int col) {
+		return getDestinationCells(new Node(row, col), map, false).size() >= 2;
+	}
 
-    private static List<Node> getDestinationCells(Node source, int[][] map) {
+    private static List<Node> getDestinationCells(Node source, int[][] map, boolean include_all) {
 		List<Node> cells = new LinkedList<>();
 		int[][] desp = { {-1, 0}, {0, -1}, {1, 0}, {0, 1} };
 
@@ -159,7 +173,7 @@ public class Solution {
         for (int i = 0; i < desp.length; ++i) {
             candidate = new Node(source.position.x + desp[i][0], source.position.y + desp[i][1]);
             
-            if (isNodeInsideMap(candidate, map) && map[candidate.position.x][candidate.position.y] == 0) {
+            if (isNodeInsideMap(candidate, map) && (map[candidate.position.x][candidate.position.y] == 0 || include_all)) {
                 cells.add(candidate);
             }
         }
@@ -183,7 +197,7 @@ public class Solution {
         }
        
         private void initialize() {
-            distance = 0;
+            distance = 1;
             position = new Coordinates();
         }
 
