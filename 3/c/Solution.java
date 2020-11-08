@@ -40,10 +40,12 @@ public class Solution {
 
     public static int solution(String x) {
         BigInteger num = new BigInteger(x);
-        int num_ops = 0, consecutive_zeros;
-        while (num.bitLength() > 1) {
-            if (num.testBit(0)) {                
-                if (num.mod(BigInteger.valueOf(4)).equals(BigInteger.ONE) || num.equals(BigInteger.valueOf(3))) {
+        int num_ops = 0, consecutive_zeros, bitLenght;
+        boolean tmp;
+        while ((bitLenght = num.bitLength()) > 1) {
+            if (num.testBit(0)) {  
+                tmp = bitLenght > 2 && num.testBit(1);
+                if (!tmp) {
                     num = num.subtract(BigInteger.ONE);
                 }
                 else { 
