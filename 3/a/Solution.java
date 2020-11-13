@@ -31,24 +31,19 @@ public class Solution {
 
         System.out.println("{1, 1, 1}");
         measureExecutionTime(() -> solution(l1));
-        //measureExecutionTime(() -> solution1(l1));
         measureExecutionTime(() -> solution2(l1));
         System.out.println("\n{1, 2, 3, 4, 5, 6}");
         measureExecutionTime(() -> solution(l2));
-        //measureExecutionTime(() -> solution1(l2));
         measureExecutionTime(() -> solution2(l2));
         System.out.println("\n{1, 5, 6}");
         measureExecutionTime(() -> solution(l3));
-        //measureExecutionTime(() -> solution1(l3));
         measureExecutionTime(() -> solution2(l3));
         System.out.println("\n{1..2001}");
         measureExecutionTime(() -> solution(l4), 500);
-        //measureExecutionTime(() -> solution1(l4), 500);
         measureExecutionTime(() -> solution2(l4), 500);
         System.out.println("\n{2, 3, 4, 5, 6, 8, 12, 16}");
         measureExecutionTime(() -> solution(l5));
-        //measureExecutionTime(() -> solution1(l5));
-        measureExecutionTime(() -> solution2(l5)); 
+        measureExecutionTime(() -> solution2(l5));
     }
 
     public static int solution(int[] l) {
@@ -62,30 +57,6 @@ public class Solution {
                     result += num_dividers[j];
                 }
             }
-        }
-        return result;
-    }
-
-    public static int solution1(int[] l) {
-        int dividers;
-        int multiples;
-        int result = 0;
-        for (int i = 1; i < l.length - 1; ++i) {
-            dividers = 0;
-            multiples = 0;
-            for (int j = 0; j < i; ++j) {
-                if (l[i] % l[j] == 0){
-                    dividers++;
-                }
-            }
-
-            for (int j = i + 1; j < l.length; ++j) {
-                if (l[j] % l[i] == 0){
-                    multiples++;
-                }
-            }
-
-            result += dividers * multiples;
         }
         return result;
     }
