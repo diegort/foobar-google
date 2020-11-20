@@ -1,3 +1,4 @@
+import java.lang.ref.Reference;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -41,7 +42,8 @@ public class Solution {
 
     public static int solution(int[] dimensions, int[] your_position, int[] guard_position, int distance) {
         Position reference = new Position(your_position[0], your_position[1]);
-        List<Target> targets = getCopiedTargets(dimensions, your_position, guard_position, distance);
+        Position guard = new Position(guard_position[0], guard_position[1]);
+        List<Target> targets = getPossibleTargets(dimensions, reference, guard, distance);
 
         targets = filterTargetsByDistance(targets, reference, distance);
         targets = filterHiddenTargets(targets, reference);
@@ -49,41 +51,45 @@ public class Solution {
         return Math.toIntExact(targets.stream().filter(t -> t.type == Target.ObjectType.Guard).count());
     }
 
-    private static List<Target> getCopiedTargets(int[] dimensions, int[] your_position, int[] guard_position, int distance) {
-        int max_horizontal_copies = (your_position[0] + distance)/dimensions[0] + 1;
-        int max_vertical_copies = (your_position[1] + distance)/dimensions[1] + 1;
+    private static List<Target> getPossibleTargets(int[] dimensions, Position your_position, Position guard_position, int distance) {
+        int max_horizontal_copies = (your_position.x + distance)/dimensions[0] + 1;
+        int max_vertical_copies = (your_position.y + distance)/dimensions[1] + 1;
         int last_me_index = 0, last_guard_index = 0;
         List<Target> possible_targets = new LinkedList<>();
         Target tmp;
-        int temp_pos_x_me, temp_pos_y_me, temp_pos_x_guard, temp_pos_y_guard;
+        Position temp_me = new Position(), temp_guard = new Position();
         
-        for (int i = 0; i < max_horizontal_copies; i++) {   
+        for (int i = 0; i < max_horizontal_copies; i++) {
             if (i == 0)  {
-                temp_pos_x_me = your_position[0];
-                temp_pos_x_guard = guard_position[0];
+                temp_me.x = your_position.x;
+                temp_guard.x = guard_position.x;
             }
             else {
-                temp_pos_x_me = 2 * dimensions[0] * i - possible_targets.get(last_me_index).position.x;
-                temp_pos_x_guard = 2 * dimensions[0] * i - possible_targets.get(last_guard_index).position.x;
+                temp_me.x = 2 * dimensions[0] * i - possible_targets.get(last_me_index).position.x;
+                temp_guard.x = 2 * dimensions[0] * i - possible_targets.get(last_guard_index).position.x;
             }
 
             for (int j = 0; j < max_vertical_copies; j++) {
                 if (j == 0)  {
-                    temp_pos_y_me = your_position[1];
-                    temp_pos_y_guard = guard_position[1];
+                    temp_me.y = your_position.y;
+                    temp_guard.y = guard_position.y;
                 }
                 else {
-                    temp_pos_y_me = 2 * dimensions[1] * j - possible_targets.get(last_me_index).position.y;
-                    temp_pos_y_guard = 2 * dimensions[1] * j - possible_targets.get(last_guard_index).position.y;
+                    temp_me.y = 2 * dimensions[1] * j - possible_targets.get(last_me_index).position.y;
+                    temp_guard.y = 2 * dimensions[1] * j - possible_targets.get(last_guard_index).position.y;
                 }
     
-                tmp = new Target(temp_pos_x_me, temp_pos_y_me, Target.ObjectType.Me);
-                possible_targets.add(tmp);
-                last_me_index = possible_targets.size() - 1;
+                if (temp_me.distance(your_position) <= distance) {
+                    tmp = new Target(temp_me, Target.ObjectType.Me);
+                    possible_targets.add(tmp);
+                    last_me_index = possible_targets.size() - 1;
+                }
     
-                tmp = new Target(temp_pos_x_guard, temp_pos_y_guard, Target.ObjectType.Guard);
-                possible_targets.add(tmp);
-                last_guard_index = last_me_index + 1;
+                if (temp_guard.distance(your_position) <= distance) {
+                    tmp = new Target(temp_guard, Target.ObjectType.Guard);
+                    possible_targets.add(tmp);
+                    last_guard_index = possible_targets.size() - 1;
+                }
             }
         }
 
@@ -140,11 +146,17 @@ public class Solution {
             position = new Position(x, y);
             this.type = type;
         }
+
+        public Target (Position position, ObjectType type) {
+            this(position.x, position.y, type);
+        }
     }
 
     public static class Position {
         public int x;
         public int y;
+
+        public Position() {}
 
         public Position(int x, int y) {
             this.x = x;
